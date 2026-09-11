@@ -1,14 +1,28 @@
 // FAR — interactions du site
-// ⚠️ Remplacez cette adresse par votre vraie adresse e-mail :
-const EMAIL_DESTINATION = "contact@example.com";
 
-/* Menu mobile */
+/* =========================
+   EMAILJS
+========================= */
+
+emailjs.init({
+  publicKey: "p3ME3xIXOHdBrnXlH",
+});
+
+
+/* =========================
+   Menu mobile
+========================= */
+
 const burger = document.getElementById("burger");
 const navMobile = document.getElementById("nav-mobile");
 
 function setMenu(open) {
   burger.setAttribute("aria-expanded", String(open));
-  burger.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+  burger.setAttribute(
+    "aria-label",
+    open ? "Fermer le menu" : "Ouvrir le menu"
+  );
+
   navMobile.hidden = !open;
 }
 
@@ -24,45 +38,88 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") setMenu(false);
 });
 
-/* Année du pied de page */
-document.getElementById("year").textContent = String(new Date().getFullYear());
 
-/* Formulaire de contact */
+/* =========================
+   Année du pied de page
+========================= */
+
+document.getElementById("year").textContent =
+  String(new Date().getFullYear());
+
+
+/* =========================
+   Formulaire de contact
+========================= */
+
 const form = document.getElementById("contact-form");
 const note = document.getElementById("form-note");
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const fields = [form.nom, form.email, form.message];
+  // Vérification des champs
+  const fields = [
+    form.nom,
+    form.email,
+    form.message
+  ];
+
   let valid = true;
+
   fields.forEach((field) => {
-    const ok = field.value.trim() !== "" && field.checkValidity();
+    const ok =
+      field.value.trim() !== "" &&
+      field.checkValidity();
+
     field.classList.toggle("invalid", !ok);
+
     if (!ok && valid) {
       field.focus();
       valid = false;
     }
   });
+
   if (!valid) return;
 
-  const body = [
-    `Nom : ${form.nom.value}`,
-    `Email : ${form.email.value}`,
-    `Type de projet : ${form.projet.value || "Non précisé"}`,
-    "",
-    form.message.value,
-  ].join("\n");
 
-  window.location.href =
-    `mailto:${EMAIL_DESTINATION}` +
-    `?subject=${encodeURIComponent(`Nouveau projet — ${form.nom.value}`)}` +
-    `&body=${encodeURIComponent(body)}`;
+  // Envoi avec EmailJS
+  emailjs.send(
+    "service_kh3pk81",
+    "template_5ijgkum",
+    {
+      nom: form.nom.value,
+      email: form.email.value,
+      projet: form.projet.value || "Non précisé",
+      message: form.message.value
+    }
+  )
+  .then(() => {
 
-  note.hidden = false;
+    // Message de succès
+    note.hidden = false;
+    note.textContent =
+      "Votre demande a bien été envoyée. Merci !";
+
+    // Réinitialisation du formulaire
+    form.reset();
+
+  })
+  .catch((error) => {
+
+    console.error("Erreur EmailJS :", error);
+
+    note.hidden = false;
+    note.textContent =
+      "Une erreur est survenue. Veuillez réessayer.";
+
+  });
 });
 
-/* Apparition progressive */
+
+/* =========================
+   Apparition progressive
+========================= */
+
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
@@ -72,7 +129,9 @@ const observer = new IntersectionObserver(
       }
     });
   },
-  { threshold: 0.15 },
+  { threshold: 0.15 }
 );
 
-document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+document
+  .querySelectorAll(".reveal")
+  .forEach((el) => observer.observe(el));
